@@ -1,0 +1,3 @@
+(library
+  (name abs_interpreter)
+  (libraries frontend abs_int))

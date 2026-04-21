@@ -1,0 +1,3 @@
+(executable
+ (name denot_interpreter)
+ (libraries frontend))

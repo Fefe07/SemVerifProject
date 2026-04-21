@@ -1,0 +1,3 @@
+(executable
+ (name main)
+ (libraries frontend abs_int abs_interpreter))

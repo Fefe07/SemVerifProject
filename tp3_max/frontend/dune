@@ -1,0 +1,11 @@
+(library
+ (name frontend)
+ (libraries zarith menhirLib))
+
+(ocamllex
+ (modules lexer))
+
+(menhir
+ (modules parser)
+ (infer true)
+ (flags --table))
