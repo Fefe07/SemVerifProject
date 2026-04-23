@@ -55,7 +55,10 @@ type env = value Idmap.t
 (* Helper functions *)
 
 
-let inject_literal e abs env = match fst e with
+let inject_literal (e : expr ext) abs (env : env) : env = 
+    (* Sets the variable corresponding to expression ext e 
+       to the abstract value abs, if this variable exists *)
+    match fst e with
     | Eid (id, _) -> Idmap.add id (Vint abs) env
     | Econst _ -> env
     | _ -> failwith "cannot inject expression"
@@ -119,6 +122,10 @@ let rec eval_expr (environment : env) ((e, _) : expr ext) =
         | Vint _, Vint _, Ege -> failwith "TDOD : Ege"
 
         (* Polymorphic operators *)
+        (* Is this the good way to treat equality tests ? *)
+        (* Here [1,2] = [1,2]... *)
+
+
         | Vbool b1, Vbool b2, Eequal ->
                 Vbool (Bool.equal b1 b2)
         | Vint i1, Vint i2, Eequal ->
@@ -224,6 +231,7 @@ let rec eval_stmt env (stmt, extent) =
             let a = eval_expr_unwrap m e1 in
             let b = eval_expr_unwrap m e2 in
             let pos_a, pos_b = pos_bas a b in
+            (* start_env takes into account that test condition is verified *)
             let start_env = m
                 |> inject_literal e1 pos_a
                 |> inject_literal e2 pos_b
@@ -244,7 +252,7 @@ let rec eval_stmt env (stmt, extent) =
 *)
             nm
         in
-
+        
         let m_n = fp f env in
         let a = eval_expr_unwrap m_n e1 in
         let b = eval_expr_unwrap m_n e2 in
@@ -261,12 +269,6 @@ let rec eval_stmt env (stmt, extent) =
     | Shalt | Sprint _ -> env
     | _ -> failwith "TODO eval_stmt"
 
-
-let eval_prog (prog, _) = List.fold_left (
-        fun env (Tstmt s) -> eval_stmt env s
-    ) Idmap.empty prog
-
-
 (* Env pretty printer *)
 
 let pp_value formatter = function
@@ -279,6 +281,13 @@ let pp_env formatter env =
             Format.fprintf formatter "%s : %a\n" id pp_value v
         ) env;
         Format.fprintf formatter "@]}@."
+
+let eval_prog (prog, _) = List.fold_left (
+        fun env (Tstmt s) -> let env' = eval_stmt env s in (* pp_env Format.std_formatter env' ;  *)env'
+    ) Idmap.empty prog
+
+
+
 
 (* let print_env = Format.printf "%a@." pp_env *)
 
