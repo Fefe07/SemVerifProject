@@ -75,6 +75,13 @@ let mult (b1, b2) (c1, c2) =
     in
     (min_bounds l, max_bounds l)
 
+(* Join *)
+let join (a1, a2) (b1, b2) =
+    min_bounds [a1; a2; b1; b2],
+    max_bounds [a1; a2; b1; b2]
+
+
+
 
 let div_bounds n d = (* d is stricly positive *)
     match n, d with
@@ -84,6 +91,7 @@ let div_bounds n d = (* d is stricly positive *)
     | _ -> zero
 
 let div_pos (b1, b2) (c1, c2) =
+    (* Division of intervals assuming c1, c2 > 0 *)
     begin
         if leq_bounds zero b1 then div_bounds b1 c2
         else div_bounds b1 c1
@@ -93,15 +101,20 @@ let div_pos (b1, b2) (c1, c2) =
         else div_bounds b2 c2
     end
 
-let div i1 (c1, c2) =
-    match
-        compare_bounds c1 zero,
-        compare_bounds c2 zero
-    with
+let rec div i1 (c1, c2) =
+    let a,b = compare_bounds c1 zero,compare_bounds c2 zero in
+    match a/(abs a), b / (abs b) with
     | 1, 1 -> div_pos i1 (c1, c2)
     | -1, -1 -> neg @@ div_pos i1 (neg (c1, c2))
-    | _ -> failwith "division by 0"
-
+    | 1, -1 | 1,0 | 0, -1 -> bottom
+    (* | _ -> failwith "division by 0" *)
+    (* This part works if we do not want to raise errors, 
+       but to treat only non-error executions *)
+    | 0, 0 -> failwith "division by 0"
+    | 0 , 1 -> div i1 (INT_BOUND Z.one, c2)
+    | -1, 0 -> div i1 (c1, INT_BOUND (Z.of_int (-1)))
+    | -1,1 -> join (div i1 (c1,INT_BOUND (Z.of_int (-1)))) (div i1 (INT_BOUND Z.one,c2))
+    | _ -> assert(false) (* Impossible *)
 
 let modulo_pos (b1, b2) (c1, c2) =
     if leq_bounds zero b1
@@ -160,11 +173,6 @@ let bas_geq a b = let x, y = bas_leq b a in y, x
 
 let bas_gt a b = let x, y = bas_lt b a in y, x
 
-
-(* Join *)
-let join (a1, a2) (b1, b2) =
-    min_bounds [a1; a2; b1; b2],
-    max_bounds [a1; a2; b1; b2]
 
 
 (* Widen *)

@@ -274,6 +274,7 @@ let rec eval_stmt env (stmt, extent) =
         pp_env Format.std_formatter m_n ;
         let a = eval_expr_unwrap m_n e1 in
         let b = eval_expr_unwrap m_n e2 in
+        (* Negation of loop condition *)
         let pos_a, pos_b = neg_bas a b in
 (*
         Format.printf "a_while : %a; a_out : %a@." Abs.pp a Abs.pp pos_a;
