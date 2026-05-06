@@ -1,6 +1,7 @@
 (* Abstract Interpretor : "Iterator" *)
 
 open Frontend.AbstractSyntax
+open Frontend.AbstractSyntaxPrinter
 
 module type AbsType = sig
     type t
@@ -64,6 +65,7 @@ let inject_literal (e : expr ext) abs (env : env) : env =
     | _ -> failwith "cannot inject expression"
 
 let map2 f idmap1 idmap2 =
+    (* *)
     let f_map id v = f v (Idmap.find id idmap2) in
     Idmap.mapi f_map idmap1
 
@@ -77,6 +79,18 @@ let val_widen v1 v2 = match v1, v2 with
 
 let rec fp f x =
     let next = f x in if x <> next then fp f next else x
+
+
+let pp_value formatter = function
+    | Vint a -> Abs.pp formatter a
+    | Vbool b -> Format.fprintf formatter "%s" @@ Bool.to_string b
+
+let pp_env formatter env =
+    Format.fprintf formatter "env : { @[\n";
+    Idmap.iter (fun (Id id) v ->
+        Format.fprintf formatter "%s : %a\n" id pp_value v
+    ) env;
+    Format.fprintf formatter "@]}@."
 
 
 
@@ -123,9 +137,9 @@ let rec eval_expr (environment : env) ((e, _) : expr ext) =
 
         (* Polymorphic operators *)
         (* Is this the good way to treat equality tests ? *)
-        (* Here [1,2] = [1,2]... *)
-
-
+        (* Here [1,2] = [1,2]... , which is problematic... *)
+        (* TODO... *)
+        
         | Vbool b1, Vbool b2, Eequal ->
                 Vbool (Bool.equal b1 b2)
         | Vint i1, Vint i2, Eequal ->
@@ -238,6 +252,8 @@ let rec eval_stmt env (stmt, extent) =
             in
             let end_env = eval_stmt start_env s in
             let nm = map2 val_widen m end_env in
+            Printf.printf "Environment after one step of widening : \n";
+            pp_env Format.std_formatter nm ;
 (*
             Format.printf "a : %a; a_start : %a; a_end : %a; a_wide : %a@."
                 Abs.pp a
@@ -254,6 +270,8 @@ let rec eval_stmt env (stmt, extent) =
         in
         
         let m_n = fp f env in
+        Printf.printf "Final environment after widening : \n";
+        pp_env Format.std_formatter m_n ;
         let a = eval_expr_unwrap m_n e1 in
         let b = eval_expr_unwrap m_n e2 in
         let pos_a, pos_b = neg_bas a b in
@@ -267,23 +285,18 @@ let rec eval_stmt env (stmt, extent) =
 
 
     | Shalt | Sprint _ -> env
+    (* | Sassert e -> 
+        (* On ne traite que les cas où le programme termine sans erreur  -> on peut supposer le assert vrai *)
+        match  *)
+
     | _ -> failwith "TODO eval_stmt"
 
 (* Env pretty printer *)
 
-let pp_value formatter = function
-    | Vint a -> Abs.pp formatter a
-    | Vbool b -> Format.fprintf formatter "%s" @@ Bool.to_string b
 
-let pp_env formatter env =
-        Format.fprintf formatter "env : { @[\n";
-        Idmap.iter (fun (Id id) v ->
-            Format.fprintf formatter "%s : %a\n" id pp_value v
-        ) env;
-        Format.fprintf formatter "@]}@."
 
 let eval_prog (prog, _) = List.fold_left (
-        fun env (Tstmt s) -> let env' = eval_stmt env s in (* pp_env Format.std_formatter env' ;  *)env'
+        fun env (Tstmt s) -> let env' = eval_stmt env s in  pp_stmt Format.std_formatter (fst s) ; Printf.printf "\n" ; pp_env Format.std_formatter env' ;  env'
     ) Idmap.empty prog
 
 

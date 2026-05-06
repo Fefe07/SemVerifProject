@@ -134,8 +134,10 @@ let check (a, b) =
     if compare_bounds a b = 1 then bottom else (a, b)
 
 let bas_leq a b : t * t =
+    (* Updates ranges a and b by adding the constraint a<=b *)
     let (a1, a2), (b1, b2) = a, b in
-    if compare_bounds a1 b2 = 1 then bottom, bottom else
+    (* If a1 > b2 it is impossible *)
+    if compare_bounds a1 b2 >= 1 then bottom, bottom else
     ( if compare_bounds a2 b2 <= 0 then a else (a1, b2) ),
     ( if compare_bounds a1 b1 <= 0 then b else (a1, b2) )
 
