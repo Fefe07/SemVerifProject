@@ -23,6 +23,7 @@ module type AbsType = sig
     val bas_lt : t -> t -> t * t
     val bas_geq: t -> t -> t * t
     val bas_gt : t -> t -> t * t
+    val bas_eq : t -> t -> t
 
     val join : t -> t -> t
     val widen : t -> t -> t
@@ -286,11 +287,21 @@ let rec eval_stmt env (stmt, extent) =
 
 
     | Shalt | Sprint _ -> env
-    (* | Sassert e -> 
+    | Sassert e -> 
         (* On ne traite que les cas où le programme termine sans erreur  -> on peut supposer le assert vrai *)
-        match  *)
+        match fst e with 
+        | Ebinop (binop, e1, e2) -> begin
+            let a = eval_expr_unwrap env e1 in
+            let b = eval_expr_unwrap env e2 in
+            match binop with 
+            | Eequal -> let pos = Abs.bas_eq a b in 
+                env |> inject_literal e1 pos 
+                |> inject_literal e2 pos 
+            | _ -> failwith "binop unmatched"
+        end
+        | _ -> failwith "assert - non traite"
 
-    | _ -> failwith "TODO eval_stmt"
+    (* | _ -> failwith "TODO eval_stmt" *)
 
 (* Env pretty printer *)
 
