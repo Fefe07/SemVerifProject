@@ -23,7 +23,7 @@ module type AbsType = sig
     val bas_lt : t -> t -> t * t
     val bas_geq: t -> t -> t * t
     val bas_gt : t -> t -> t * t
-    val bas_eq : t -> t -> t
+    val bas_eq : t -> t -> t * t
 
     val join : t -> t -> t
     val widen : t -> t -> t
@@ -293,11 +293,17 @@ let rec eval_stmt env (stmt, extent) =
         | Ebinop (binop, e1, e2) -> begin
             let a = eval_expr_unwrap env e1 in
             let b = eval_expr_unwrap env e2 in
+            let bas = 
             match binop with 
-            | Eequal -> let pos = Abs.bas_eq a b in 
-                env |> inject_literal e1 pos 
-                |> inject_literal e2 pos 
+            | Eequal -> Abs.bas_eq
+            | Ele -> Abs.bas_leq
+            | Elt -> Abs.bas_lt
+            | Ege -> Abs.bas_geq
+            | Egt -> Abs.bas_gt
             | _ -> failwith "binop unmatched"
+            in let pos_a,pos_b = bas a b in 
+            env |> inject_literal e1 pos_a 
+            |> inject_literal e2 pos_b 
         end
         | _ -> failwith "assert - non traite"
 

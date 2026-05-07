@@ -173,14 +173,14 @@ let bas_geq a b = let x, y = bas_leq b a in y, x
 
 let bas_gt a b = let x, y = bas_lt b a in y, x
 
-let bas_eq a b = 
+let inter a b = 
     let (a1, a2), (b1, b2) = a, b in
     if compare_bounds a1 b2 > 0 then bottom else
     if compare_bounds a2 b1 < 0 then bottom else
     ( if compare_bounds a1 b1 < 0 then b1 else a1 ),
     ( if compare_bounds a2 b2 < 0 then a2 else b2 )
 
-let inter = bas_eq
+let bas_eq a b = let x = inter a b in (x,x) 
 
 (* Widen *)
 let widen (a1, a2) (b1, b2) =
