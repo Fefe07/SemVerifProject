@@ -22,5 +22,5 @@ doc: all
 	@dune build @doc-private
 
 compress: clean
-	@tar -czvf ../project-semantics.tar.gz --exclude=".git*" ../project-semantics
+	@tar -czvf ../project-semantics.tar.gz --exclude=".git*" ../static-analyzer
 	@mv ../project-semantics.tar.gz .
