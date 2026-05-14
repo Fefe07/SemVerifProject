@@ -17,8 +17,8 @@ let doit filename =
   let prog = FileParser.parse_file filename in
   let cfg = Tree_to_cfg.prog prog in
   if !Options.verbose then Format.printf "%a" ControlFlowGraphPrinter.print_cfg cfg ;
-  ControlFlowGraphPrinter.output_dot !Options.cfg_out cfg ;
-  Iterator.iterate cfg
+  ControlFlowGraphPrinter.output_dot !Options.cfg_out cfg
+(*   Iterator.iterate cfg *)
 
 (* parses arguments to get filename *)
 let main () =

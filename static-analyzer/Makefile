@@ -24,3 +24,6 @@ doc: all
 compress: clean
 	@tar -czvf ../project-semantics.tar.gz --exclude=".git*" ../static-analyzer
 	@mv ../project-semantics.tar.gz .
+
+display_cfg: cfg.dot
+	@dot -Tpdf cfg.dot -o cfg.pdf && okular cfg.pdf &
