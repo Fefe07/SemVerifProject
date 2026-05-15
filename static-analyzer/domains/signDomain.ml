@@ -40,7 +40,9 @@ module SignValueDomain : VALUE_DOMAIN = struct
         | P, v -> v
         | N, v -> neg v
 
-    let div s r = if is_bottom r then Bottom else mult s r
+    let div s r = if r = Z then Bottom else mult s r
+
+    let modulo s r = if r = Z then Bottom else s
 
     let const (z : Z.t) : t =
         match Z.sign z with
@@ -63,18 +65,19 @@ module SignValueDomain : VALUE_DOMAIN = struct
 
     let binary (s : t) (r : t) ibop : t = Frontend.AbstractSyntax.(
         match ibop with
-        | AST_PLUS -> add s r
-        | AST_MINUS -> sub s r
-        | AST_MULTIPLY -> mult s r
-        | AST_DIVIDE -> div s r
-        | AST_MODULO -> Top (* Check modulo behaviour *)
-    )
+        | AST_PLUS -> add
+        | AST_MINUS -> sub
+        | AST_MULTIPLY -> mult
+        | AST_DIVIDE -> div
+        | AST_MODULO -> modulo
+    ) s r
 
-    let compare (s : t) (r : t) cop : t * t = s, r (* TODO *)
-
-    let bwd_unary (s : t) iuop (target : t) : t = s (* TODO *)
-
-    let bwd_binary (s : t) (r : t) ibop (target : t) : t * t = s, r (* TODO *)
+    let leq (s : t) (r : t) : bool =
+        match s, r with
+        | Bottom, _ | _, Top -> true
+        | Top, _ | _, Bottom -> false
+        | Z, _ -> true
+        | _ -> s = r
 
     let join (s : t) (r : t) : t =
         match s, r with
@@ -89,16 +92,53 @@ module SignValueDomain : VALUE_DOMAIN = struct
         | Top, v | v, Top -> v
         | _ -> if s = r then s else Z
 
+    let compare (s : t) (r : t) cop : t * t = Frontend.AbstractSyntax.(
+        match cop with
+        | AST_EQUAL ->
+            if leq s r then s, s else if leq r s then r, r else Z, Z
+        | AST_NOT_EQUAL ->
+            if (s, r) = (Z, Z) then Bottom, Bottom else s, r
+        | AST_LESS ->
+            ( if r = Z || r = N then meet s N else s ),
+            ( if s = Z || s = P then meet r P else r )
+        | AST_LESS_EQUAL ->
+            if (s, r) = (Z, Z) then Bottom, Bottom else
+            ( if r = Z || r = N then meet s N else s),
+            ( if s = Z || s = P then meet r P else r)
+        | AST_GREATER ->
+            ( if r = Z || r = P then meet s P else s),
+            ( if s = Z || s = N then meet r N else r)
+        | AST_GREATER_EQUAL ->
+            if (s, r) = (Z, Z) then Bottom, Bottom else
+            ( if r = Z || r = P then meet s P else s),
+            ( if s = Z || s = N then meet r N else r)
+    )
+
+    let bwd_unary (s : t) iuop (target : t) : t = Frontend.AbstractSyntax.(
+        match iuop with
+        | AST_UNARY_PLUS -> meet s target
+        | AST_UNARY_MINUS -> meet s (neg target)
+    )
+
+    let bwd_binary (s : t) (r : t) ibop (target : t) : t * t =
+    Frontend.AbstractSyntax.(
+        match ibop with
+        | AST_PLUS ->
+            meet s (sub target r), meet r (sub target s)
+        | AST_MINUS ->
+            meet s (add target r), meet r (sub s target)
+        | AST_MULTIPLY ->
+            if s = Z || r = Z then
+                let res = meet Z target in res, res
+            else
+            meet s (div target r), meet r (div target s)
+        | AST_DIVIDE -> s, r (* Not implemented *)
+        | AST_MODULO -> s, r (* Not implemented *)
+    )
+
     let widen : t -> t -> t = join
 
     let narrow : t -> t -> t = meet
-
-    let leq (s : t) (r : t) : bool =
-        match s, r with
-        | Bottom, _ | _, Top -> true
-        | Top, _ | _, Bottom -> false
-        | Z, _ -> true
-        | _ -> s = r
 
     let pp (formatter : Format.formatter) (s : t) : unit =
         Format.pp_print_string formatter (
