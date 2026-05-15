@@ -236,8 +236,8 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
             meet x (add r y), meet y (sub x r)
         | AST_MULTIPLY ->
             meet x (div r y), meet y (div r x)
-        | AST_DIVIDE -> top, top (* Not implemented *)
-        | AST_MODULO -> top, top (* Not implemented *)
+        | AST_DIVIDE -> x, y (* Not implemented *)
+        | AST_MODULO -> x, y (* Not implemented *)
     )
 
 
