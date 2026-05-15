@@ -13,7 +13,7 @@ module ValueDomainDerivation
         : DOMAIN =
 struct
 
-    (* Unused elements from the VALUE_DOMAIN Abs : top, bottom, is_bottom *)
+    (* Unused elements from the VALUE_DOMAIN Abs : top, is_bottom *)
 
     (* Private *)
 
@@ -30,9 +30,11 @@ struct
             Vars.support
 
     (* Extends a binary operation "point à point" to maps *)
-    let extend_binop (binop : Abs.t -> Abs.t -> Abs.t) map1 map2=
-        let f v = binop (VarMap.find v map1) (VarMap.find v map2) in
-        map_gen f
+    let extend_binop (binop : Abs.t -> Abs.t -> Abs.t) map1 map2 =
+        try
+            let f v = binop (VarMap.find v map1) (VarMap.find v map2) in
+            map_gen f
+        with Not_found -> VarMap.empty
 
     let rec evaluate_iexpr (dom : Abs.t VarMap.t) (iexpr : int_expr) : Abs.t =
         match iexpr with
@@ -41,7 +43,7 @@ struct
         | CFG_int_binary(ibop, e1, e2) ->
                 Abs.binary (evaluate_iexpr dom e1) (evaluate_iexpr dom e2) ibop
         | CFG_int_var(v) ->
-                VarMap.find v dom
+                ( try VarMap.find v dom with Not_found -> Abs.bottom )
         | CFG_int_const(z) ->
                 Abs.const z
         | CFG_int_rand(z1, z2) ->
@@ -80,11 +82,12 @@ struct
 
     let narrow = extend_binop Abs.narrow
 
-    let leq map1 map2 =
-        let check v = Abs.leq (VarMap.find v map1) (VarMap.find v map2) in
-        List.for_all check Vars.support
-
     let is_bottom = VarMap.is_empty
+
+    let leq map1 map2 =
+        if is_bottom map1 then true else
+        let check v = Abs.leq (VarMap.find v map1) (VarMap.find v map2) in
+        try List.for_all check Vars.support with Not_found -> false
 
     let rec guard map =
 

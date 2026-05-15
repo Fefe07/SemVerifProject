@@ -208,6 +208,9 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
 
     let bas_gt a b = let x, y = bas_lt b a in y, x
 
+    let leq (a1, a2) (b1, b2) =
+        leq_bounds b1 a1 && leq_bounds a2 b2
+
     let compare i1 i2 cop = Frontend.AbstractSyntax.(
         match cop with
         | AST_EQUAL -> let r = meet i1 i2 in r, r
@@ -235,6 +238,9 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
         | AST_MINUS ->
             meet x (add r y), meet y (sub x r)
         | AST_MULTIPLY ->
+            if x = (zero, zero) || y = (zero, zero) then
+                if leq (zero, zero) r then x, y else bottom, bottom
+            else
             meet x (div r y), meet y (div r x)
         | AST_DIVIDE -> x, y (* Not implemented *)
         | AST_MODULO -> x, y (* Not implemented *)
@@ -246,9 +252,6 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
         ( if leq_bounds b2 a2 then a2 else POS_INF )
 
     let narrow i1 i2 : t = top (* Not implemented *)
-
-    let leq (a1, a2) (b1, b2) =
-        leq_bounds b1 a1 && leq_bounds a2 b2
 
     let pp formatter (a, b) =
         Format.fprintf formatter "@[[%a; %a]@]" pp_bound a pp_bound b
