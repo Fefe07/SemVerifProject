@@ -184,8 +184,8 @@ let bas_eq a b = let x = inter a b in (x,x)
 
 (* Widen *)
 let widen (a1, a2) (b1, b2) =
-    ( if compare a1 b1 <= 0 then a1 else NEG_INF ),
-    ( if compare a2 b2 >= 0 then a2 else POS_INF )
+    ( if compare_bounds a1 b1 <= 0 then a1 else NEG_INF ),
+    ( if compare_bounds a2 b2 >= 0 then a2 else POS_INF )
 
 
 (* Pretty printer *)
