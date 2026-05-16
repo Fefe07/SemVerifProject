@@ -257,6 +257,6 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
         Format.fprintf formatter "@[[%a; %a]@]" pp_bound a pp_bound b
 end
 
-module IntervalDomain(Vars : VARS) : DOMAIN =
+module Make(Vars : VARS) : DOMAIN =
     ValueDomainDerivation(IntervalValueDomain)(Vars)
 

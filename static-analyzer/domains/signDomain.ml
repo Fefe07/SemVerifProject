@@ -153,6 +153,6 @@ module SignValueDomain : VALUE_DOMAIN = struct
 end
 
 
-module SignDomain(Vars : VARS) : DOMAIN =
+module Make(Vars : VARS) : DOMAIN =
     ValueDomainDerivation(SignValueDomain)(Vars)
 
