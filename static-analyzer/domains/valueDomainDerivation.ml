@@ -15,28 +15,38 @@ struct
 
     (* Unused elements from the VALUE_DOMAIN Abs : top, is_bottom *)
 
-    (* Private *)
+    exception Bottom_exc
+
+    type t = Abs.t VarMap.t
+
+    let bottom = VarMap.empty
+
+    let is_bottom = VarMap.is_empty
 
     (* Change the mapped abstract value of a variable, collapsing to bottom *)
-    let change_map (var : var) (abs : Abs.t) (dom : Abs.t VarMap.t) =
+    let change_map (var : var) (abs : Abs.t) (dom : t) : t =
         if Abs.is_bottom abs then VarMap.empty else
         VarMap.add var abs dom
 
+    (* Find in domain, output Abs.bottom if  *)
+    let find (var : var) (dom : t) : Abs.t =
+        try VarMap.find var dom with Not_found -> Abs.bottom
+
     (* Generate a map on `Vars.support` from a function *)
-    let map_gen (f : var -> Abs.t) : Abs.t VarMap.t =
-        List.fold_left
-            (fun m v -> change_map v (f v) m)
-            VarMap.empty
-            Vars.support
+    let map_gen (f : var -> Abs.t) : t =
+        let constr m v =
+            let a = f v in
+            if Abs.is_bottom a then raise Bottom_exc else
+            VarMap.add v a m
+        in
+        try List.fold_left constr VarMap.empty Vars.support
+        with Bottom_exc -> bottom
 
-    (* Extends a binary operation "point à point" to maps *)
-    let extend_binop (binop : Abs.t -> Abs.t -> Abs.t) map1 map2 =
-        try
-            let f v = binop (VarMap.find v map1) (VarMap.find v map2) in
-            map_gen f
-        with Not_found -> VarMap.empty
+    let init =
+        let f _ = Abs.const Z.zero in
+        map_gen f
 
-    let rec evaluate_iexpr (dom : Abs.t VarMap.t) (iexpr : int_expr) : Abs.t =
+    let rec evaluate_iexpr (dom : t) (iexpr : int_expr) : Abs.t =
         match iexpr with
         | CFG_int_unary(iuop, e') ->
                 Abs.unary (evaluate_iexpr dom e') iuop
@@ -49,7 +59,6 @@ struct
         | CFG_int_rand(z1, z2) ->
                 Abs.rand z1 z2
 
-
     let negate_cop cop = Frontend.AbstractSyntax.(
         match cop with
         | AST_EQUAL -> AST_NOT_EQUAL
@@ -60,19 +69,13 @@ struct
         | AST_GREATER_EQUAL -> AST_LESS
     )
 
-
-    (* Public *)
-
-    type t = Abs.t VarMap.t
-
-    let init =
-        let f _ = Abs.const Z.zero in
-        map_gen f
-
-    let bottom = VarMap.empty
-
     let assign dom var iexpr =
         change_map var (evaluate_iexpr dom iexpr) dom
+
+    (* Extends a binary operation "point à point" to maps *)
+    let extend_binop (binop : Abs.t -> Abs.t -> Abs.t) map1 map2 =
+        let f v = binop (find v map1) (find v map2) in
+        try map_gen f with Bottom_exc -> bottom
 
     let join = extend_binop Abs.join
 
@@ -82,12 +85,11 @@ struct
 
     let narrow = extend_binop Abs.narrow
 
-    let is_bottom = VarMap.is_empty
-
     let leq map1 map2 =
         if is_bottom map1 then true else
+        if is_bottom map2 then false else
         let check v = Abs.leq (VarMap.find v map1) (VarMap.find v map2) in
-        try List.for_all check Vars.support with Not_found -> false
+        List.for_all check Vars.support
 
     let rec guard map =
 
@@ -142,14 +144,14 @@ struct
 
 
     let pp formatter map =
-        Format.fprintf formatter "@[{\n";
+        Format.fprintf formatter "{ @[<h 0>";
         VarMap.iter
             (fun v a ->
-                Format.fprintf formatter "  %s : %a\n"
+                Format.fprintf formatter "@ %s:%a;"
                     v.var_name Abs.pp a
             )
             map;
-        Format.fprintf formatter "}@]"
+        Format.fprintf formatter "@] }"
 
 end
 
