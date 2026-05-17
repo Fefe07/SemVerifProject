@@ -13,6 +13,14 @@ module Make(Abs : DOMAIN) = struct
     (* cfg : cfg ; map : Abs.t NodeMap.t *)
 
     (* Printing *)
+    let assert_log_formatter : Format.formatter ref = ref Format.std_formatter
+
+    let print_assert_failure (pos : Lexing.position) =
+        Format.fprintf !assert_log_formatter
+            "File \"%s\", line %i: Assertion failure ...@."
+            pos.pos_fname pos.pos_lnum
+
+
     let pp_abs_nodemap formatter (map : Abs.t NodeMap.t) : unit =
         let iter_node node abs : unit = Format.fprintf formatter "<%i>: %a@ "
             node.node_id
@@ -59,7 +67,10 @@ module Make(Abs : DOMAIN) = struct
         | CFG_skip _ -> abs
         | CFG_assign(var, iexpr) -> Abs.assign abs var iexpr
         | CFG_guard bexpr -> Abs.guard abs bexpr
-        | CFG_assert _ -> abs (* TODO *)
+        | CFG_assert((bexpr, (pos, _))) -> let new_abs = Abs.guard abs bexpr in
+            if not (Abs.leq abs new_abs) (* inequality *) then
+                print_assert_failure pos;
+            new_abs
         | CFG_call _ -> abs (* TODO *)
 
     let update map node =

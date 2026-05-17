@@ -286,10 +286,10 @@ echo "<table>"                                    >> $index_html
 total=$(expr $(find examples -name "*.c" | wc -l))
 solved=0
 
-treat_examples "bool" "Boolean operations" "--domain constants" ""
+treat_examples "bool" "Boolean operations" "--domain sign" ""
 treat_examples "bool" "Boolean operations" "--domain interval" ""
-treat_examples "constant" "Constants operations" "--domain constants" ""
-treat_examples "constant_loop" "Constants loops" "--domain constants" ""
+treat_examples "constant" "Constants operations" "--domain sign" ""
+treat_examples "constant_loop" "Constants loops" "--domain sign" ""
 treat_examples "constant" "Constants operations (I)" "--domain interval" ""
 treat_examples "interval" "Interval operations" "--domain interval" ""
 treat_examples "constant_loop" "Constants loops (I)" "--domain interval" ""
