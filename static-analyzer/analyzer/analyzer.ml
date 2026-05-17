@@ -11,18 +11,37 @@
 *)
 
 open Frontend
+open Domains
 
 (* parse filename *)
 let doit filename =
-  let prog = FileParser.parse_file filename in
-  let cfg = Tree_to_cfg.prog prog in
-  if !Options.verbose then Format.printf "%a" ControlFlowGraphPrinter.print_cfg cfg ;
-  ControlFlowGraphPrinter.output_dot !Options.cfg_out cfg
-(*   Iterator.iterate cfg *)
+    let cfg = filename |> FileParser.parse_file |> Tree_to_cfg.prog in
+
+    (* Verbose option : print cfg in stdout *)
+    if !Options.verbose then
+        Format.printf "%a" ControlFlowGraphPrinter.print_cfg cfg;
+
+    (* print cfg in cfg.dot *)
+    ControlFlowGraphPrinter.output_dot !Options.cfg_out cfg;
+
+    let module Vars : Domain.VARS = struct let support = cfg.cfg_vars end in
+
+    (* Using First Class Modules *)
+    let module AbsDom = (val (
+        match !Options.domain with
+        | "sign" -> (module SignDomain.Make(Vars))
+        | "interval" -> (module IntervalDomain.Make(Vars))
+        | _ -> (module IntervalDomain.Make(Vars)) (* default choice *)
+    ) : Domain.DOMAIN) in
+
+    let module Iter = Iterator.Make(AbsDom) in
+
+    let result = Iter.iterate cfg in
+    Iter.print_abs_nodemap result
 
 (* parses arguments to get filename *)
 let main () =
-  let _ = Options.init () in
-  doit !Options.file
+    let _ = Options.init () in
+    doit !Options.file
 
 let _ = main ()
