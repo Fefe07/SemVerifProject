@@ -94,6 +94,8 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
         else (INT_BOUND z1, INT_BOUND z2)
 
     let join (a1, a2) (b1, b2) =
+        if is_bottom (a1, a2) then (b1, b2) else
+        if is_bottom (b1, b2) then (a1, a2) else
         min_bounds [a1; a2; b1; b2],
         max_bounds [a1; a2; b1; b2]
 
