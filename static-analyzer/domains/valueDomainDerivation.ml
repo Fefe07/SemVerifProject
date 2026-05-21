@@ -136,7 +136,7 @@ struct
                 meet
                     (bwd_evaluate_iexpr iexpr1 x' map)
                     (bwd_evaluate_iexpr iexpr2 y' map)
-            | CFG_bool_const(b) -> if b then map else VarMap.empty
+            | CFG_bool_const(b) -> if b == bool then map else VarMap.empty
             | CFG_bool_rand -> map
         in
 

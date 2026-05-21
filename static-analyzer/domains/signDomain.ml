@@ -129,7 +129,8 @@ module SignValueDomain : VALUE_DOMAIN = struct
             meet s (add target r), meet r (sub s target)
         | AST_MULTIPLY ->
             if s = Z || r = Z then
-                let res = meet Z target in res, res
+                if leq Z target then s, r
+                else Bottom, Bottom
             else
             meet s (div target r), meet r (div target s)
         | AST_DIVIDE -> s, r (* Not implemented *)

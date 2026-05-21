@@ -67,10 +67,12 @@ module Make(Abs : DOMAIN) = struct
         | CFG_skip _ -> abs
         | CFG_assign(var, iexpr) -> Abs.assign abs var iexpr
         | CFG_guard bexpr -> Abs.guard abs bexpr
-        | CFG_assert((bexpr, (pos, _))) -> let new_abs = Abs.guard abs bexpr in
-            if not (Abs.leq abs new_abs) (* inequality *) then
-                print_assert_failure pos;
-            new_abs
+        | CFG_assert((bexpr, (pos, _))) -> let open Frontend.AbstractSyntax in
+            let nexpr = CFG_bool_unary (AST_NOT, bexpr) in
+            let neg_abs = Abs.guard abs nexpr in
+            let pos_abs = Abs.guard abs bexpr in
+            if not (Abs.is_bottom neg_abs) then print_assert_failure pos;
+            pos_abs
         | CFG_call _ -> abs (* TODO *)
 
     let update map node =

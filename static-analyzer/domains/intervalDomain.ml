@@ -148,30 +148,7 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
                        (div i1 (INT_BOUND Z.one,c2))
         | _ -> failwith "Impossible case in interval division"
 
-    let modulo_pos (b1, b2) (c1, c2) =
-        if leq_bounds zero b1
-        then
-            if leq_bounds b2 c1
-            then
-                (b1, b2)
-            else
-                if leq_bounds b2 c2
-                then
-                    (zero, b2)
-                else
-                    (zero, c2)
-        else
-            (zero, c2)
-
-    let modulo i1 (c1, c2) =
-        match
-            compare_bounds c1 zero,
-            compare_bounds c2 zero
-        with
-        | 1, 1 -> modulo_pos i1 (c1, c2)
-        | -1, -1 -> neg @@ modulo_pos i1 (neg (c1, c2))
-        | _ -> failwith "division by 0"
-
+    let modulo a b  = sub a (mult b (div a b))
 
     let unary i iuop =
     Frontend.AbstractSyntax.(
