@@ -35,6 +35,7 @@ let doit filename =
     ) : Domain.DOMAIN) in
 
     let module Iter = Iterator.Make(AbsDom) in
+    Iter.verbose := !Options.verbose;
 
     let result = Iter.iterate cfg in
     Iter.print_abs_nodemap result
