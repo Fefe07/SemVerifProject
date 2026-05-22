@@ -134,14 +134,10 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
 
     let rec div i1 (c1, c2) =
         let a,b = compare_bounds c1 zero,compare_bounds c2 zero in
-        match a/(abs a), b / (abs b) with
+        match a, b with
         | 1, 1 -> div_pos i1 (c1, c2)
         | -1, -1 -> neg @@ div_pos i1 (neg (c1, c2))
-        | 1, -1 | 1,0 | 0, -1 -> bottom
-        (* | _ -> failwith "division by 0" *)
-        (* This part works if we do not want to raise errors, 
-           but to treat only non-error executions *)
-        | 0, 0 -> failwith "division by 0"
+        | 1, -1 | 1,0 | 0, -1 | 0, 0 -> bottom
         | 0 , 1 -> div i1 (INT_BOUND Z.one, c2)
         | -1, 0 -> div i1 (c1, INT_BOUND (Z.of_int (-1)))
         | -1,1 -> join (div i1 (c1,INT_BOUND (Z.of_int (-1))))
