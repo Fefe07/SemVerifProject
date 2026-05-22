@@ -47,6 +47,25 @@ module Make(Abs : DOMAIN) = struct
         Format.printf "@]@ ]]@."
 
 
+    (* Graph analysis *)
+    let init_nodes cfg = cfg.cfg_init_entry ::
+        List.map (fun f -> f.func_entry) cfg.cfg_funcs
+
+
+    let find_widening_points cfg : NodeSet.t =
+        let rec search (seen : NodeSet.t) node : NodeSet.t =
+            if NodeSet.mem node seen then NodeSet.singleton node else
+            let new_seen = NodeSet.add node seen in
+            node.node_out
+                |> List.map (fun arc -> search new_seen arc.arc_dst)
+                |> List.fold_left NodeSet.union NodeSet.empty
+        in
+        init_nodes cfg
+            |> List.map (search NodeSet.empty)
+            |> List.fold_left NodeSet.union NodeSet.empty
+
+
+
     (* Iterator *)
     let add_out_nodes node set = List.fold_left
         (fun set arc -> NodeSet.add (arc.arc_dst) set)
@@ -84,27 +103,34 @@ module Make(Abs : DOMAIN) = struct
             (* Joining them *)
             |> List.fold_left Abs.join Abs.bottom
 
-    let rec iterate_rec cfg map set =
-        if NodeSet.is_empty set then map else
-        let node = NodeSet.choose set in
-        let abs = NodeMap.find node map in
-        let new_abs = update map node in
-(*         print_iter_state map set node abs new_abs; *)
-        if not (Abs.is_bottom abs) && Abs.leq abs new_abs then (* no update *)
-            iterate_rec cfg map (NodeSet.remove node set)
-        else
-            let new_map = NodeMap.add node new_abs map in
-            let new_set = set
-                |> NodeSet.remove node
-                |> add_out_nodes node
-            in
-            iterate_rec cfg new_map new_set
 
 
     let iterate cfg : Abs.t NodeMap.t =
-        let init_nodes = cfg.cfg_init_entry :: (
-            List.map (fun f -> f.func_entry) cfg.cfg_funcs
-        ) in
+        let wnodes = find_widening_points cfg in
+
+        let rec iterate_rec cfg map set =
+            if NodeSet.is_empty set then map else
+            let node = NodeSet.choose set in
+            let abs = NodeMap.find node map in
+            let joined_abs = update map node in
+            let new_abs =
+                if NodeSet.mem node wnodes then Abs.widen abs joined_abs
+                else joined_abs
+            in
+            print_iter_state map set node abs new_abs;
+            if Abs.leq new_abs abs && Abs.leq abs new_abs then
+                (* no update *)
+                iterate_rec cfg map (NodeSet.remove node set)
+            else
+                let new_map = NodeMap.add node new_abs map in
+                let new_set = set
+                    |> NodeSet.remove node
+                    |> add_out_nodes node
+                in
+                iterate_rec cfg new_map new_set
+        in
+
+        let init_nodes = init_nodes cfg in
         let map = NodeMap.empty
             |> map_add_nodes_from_list cfg.cfg_nodes Abs.bottom
             |> map_add_nodes_from_list init_nodes Abs.init

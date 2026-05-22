@@ -222,7 +222,10 @@ module IntervalValueDomain : VALUE_DOMAIN = struct
     )
 
 
-    let widen (a1, a2) (b1, b2) =
+    let widen a b =
+        if is_bottom a then b else
+        if is_bottom b then a else
+        let (a1, a2), (b1, b2) = a, b in
         ( if leq_bounds a1 b1 then a1 else NEG_INF ),
         ( if leq_bounds b2 a2 then a2 else POS_INF )
 
