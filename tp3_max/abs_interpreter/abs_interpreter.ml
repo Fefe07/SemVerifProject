@@ -2,6 +2,7 @@
 
 open Frontend.AbstractSyntax
 open Frontend.AbstractSyntaxPrinter
+open Z
 
 module type AbsType = sig
     type t
@@ -131,6 +132,7 @@ let rec eval_expr (environment : env) ((e, _) : expr ext) =
         | Vint i1, Vint i2, Emultiply -> Vint (Abs.mult i1 i2)
         | Vint i1, Vint i2, Edivide -> Vint (Abs.div i1 i2)
         | Vint i1, Vint i2, Emodulo -> Vint (Abs.modulo i1 i2)
+        (* Don't know how to treat comparisons between intervals. Shall we make a bool lattice ? *)
         | Vint _, Vint _, Elt -> failwith "TODO : Elt"
         | Vint _, Vint _, Ele -> failwith "TDOD : Ele"
         | Vint _, Vint _, Egt -> failwith "TDOD : Egt"
@@ -307,7 +309,7 @@ let rec eval_stmt env (stmt, extent) =
         end
         | _ -> failwith "assert - non traite"
 
-    (* | _ -> failwith "TODO eval_stmt" *)
+    
 
 (* Env pretty printer *)
 
