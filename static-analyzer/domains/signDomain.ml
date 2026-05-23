@@ -92,26 +92,34 @@ module SignValueDomain : VALUE_DOMAIN = struct
         | Top, v | v, Top -> v
         | _ -> if s = r then s else Z
 
+    let compare_less (s : t) (r : t) (is_strict : bool) =
+        (* compare s r <AST_LESS or AST_LESS_EQUAL> *)
+        (* assuming s and r are not bottom *)
+        (
+            if r = P || r = Top then s else
+            if s = N || s = Top then N else
+            if is_strict then Bottom else Z
+        ), (
+            if s = N || s = Top then r else
+            if r = P || r = Top then P else
+            if is_strict then Bottom else Z
+        )
+
     let compare (s : t) (r : t) cop : t * t = Frontend.AbstractSyntax.(
+        if is_bottom s || is_bottom r then Bottom, Bottom else
         match cop with
         | AST_EQUAL ->
             if leq s r then s, s else if leq r s then r, r else Z, Z
         | AST_NOT_EQUAL ->
             if (s, r) = (Z, Z) then Bottom, Bottom else s, r
         | AST_LESS ->
-            ( if r = Z || r = N then meet s N else s ),
-            ( if s = Z || s = P then meet r P else r )
+            compare_less s r true
         | AST_LESS_EQUAL ->
-            if (s, r) = (Z, Z) then Bottom, Bottom else
-            ( if r = Z || r = N then meet s N else s),
-            ( if s = Z || s = P then meet r P else r)
+            compare_less s r false
         | AST_GREATER ->
-            ( if r = Z || r = P then meet s P else s),
-            ( if s = Z || s = N then meet r N else r)
+            let r', s' = compare_less r s true in s', r'
         | AST_GREATER_EQUAL ->
-            if (s, r) = (Z, Z) then Bottom, Bottom else
-            ( if r = Z || r = P then meet s P else s),
-            ( if s = Z || s = N then meet r N else r)
+            let r', s' = compare_less r s false in s', r'
     )
 
     let bwd_unary (s : t) iuop (target : t) : t = Frontend.AbstractSyntax.(

@@ -290,6 +290,7 @@ solved=0
 #treat_examples "bool" "Boolean operations" "--domain interval" ""
 treat_examples "bool" "Boolean operations(C)" "--domain congruence" ""
 # treat_examples "constant" "Constants operations" "--domain sign" ""
+treat_examples "sign" "Sign operations" "--domain sign" ""
 treat_examples "constant" "Constants operations (I)" "--domain interval" ""
 #treat_examples "interval" "Interval operations" "--domain interval" ""
 # treat_examples "constant_loop" "Constants loops" "--domain sign" ""

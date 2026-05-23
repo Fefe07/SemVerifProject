@@ -12,6 +12,8 @@ open Domains.Domain
 module Make(Abs : DOMAIN) = struct
     (* cfg : cfg ; map : Abs.t NodeMap.t *)
 
+    let verbose : bool ref = ref false
+
     (* Printing *)
     let assert_log_formatter : Format.formatter ref = ref Format.std_formatter
 
@@ -117,7 +119,7 @@ module Make(Abs : DOMAIN) = struct
                 if NodeSet.mem node wnodes then Abs.widen abs joined_abs
                 else joined_abs
             in
-            print_iter_state map set node abs new_abs;
+            if !verbose then print_iter_state map set node abs new_abs;
             if Abs.leq new_abs abs && Abs.leq abs new_abs then
                 (* no update *)
                 iterate_rec cfg map (NodeSet.remove node set)
