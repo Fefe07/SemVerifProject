@@ -5,7 +5,7 @@ open ValueDomain
 open ValueDomainDerivation
 open Z
 
-module SignValueDomain : VALUE_DOMAIN = struct
+module CongruenceValueDomain : VALUE_DOMAIN = struct
 
     type t = V of Z.t * Z.t | Bottom
 
@@ -33,7 +33,7 @@ module SignValueDomain : VALUE_DOMAIN = struct
         match s, r with
         | Bottom, _ | _, Bottom -> Bottom
         | V(a,b), V(a',b') ->
-          V(gcd (gcd (a*a') (a*b')) b*a' , b*b')
+          V(gcd (gcd (a*a') (a*b')) (b*a') , b*b')
 
 
     let div s r = 
@@ -42,7 +42,7 @@ module SignValueDomain : VALUE_DOMAIN = struct
         | V(a,b), V(a',b') -> 
           if a'=Z.zero && b' = Z.zero then Bottom 
           else 
-            if a' = Z.zero && b' <> Z.zero && b' mod a = Z.zero && b' mod b = Z.zero then 
+            if a' = Z.zero && b' <> Z.zero then 
             V(a / (abs b'), b/b')
         else top
 
@@ -50,6 +50,7 @@ module SignValueDomain : VALUE_DOMAIN = struct
       match s,r with 
       | Bottom, _ | _, Bottom -> Bottom
       | V(a,b), V(a',b') ->
+        if a' = zero && b' = zero then s else
         if a' = Z.zero && a mod b' = zero then begin 
           V(zero, b mod b')
         end else top
@@ -80,7 +81,8 @@ module SignValueDomain : VALUE_DOMAIN = struct
         | Bottom, _ -> true 
         | _,Bottom -> false 
         | V(a,b), V(a', b') ->
-          (a mod a' = Z.zero) && (b-b' mod a' = Z.zero)
+          if a' = zero then r = s
+          else (a mod a' = Z.zero) && (b-b' mod a' = Z.zero)
 
     let join (s : t) (r : t) : t =
       match s, r with
@@ -102,7 +104,11 @@ module SignValueDomain : VALUE_DOMAIN = struct
         match s, r with
         | Bottom, _ | _, Bottom -> Bottom
         | V(a,b), V(a',b') ->
-          if b-b' mod (gcd a a') = zero then 
+          if a = zero then begin 
+            if a' = zero then (if b = b' then const b else bottom)
+            else if (b - b') mod a' = zero then const b else bottom 
+          end else if a' = zero && (b-b') mod a = zero then const b'
+          else if b-b' mod (gcd a a') = zero then 
             let (x,y) = euclide a a' in
             let b'' = b + (b' - b)/(gcd a a')*x*a  in 
             V(lcm a a', b'')
@@ -162,8 +168,13 @@ module SignValueDomain : VALUE_DOMAIN = struct
             meet s (sub target r), meet r (sub target s)
         | AST_MINUS ->
             meet s (add target r), meet r (sub s target)
-        | AST_MULTIPLY ->
+        | AST_MULTIPLY -> begin
+            match s,r with 
+            | V(a,b),_  when a = zero && b =zero -> if leq (const zero) target then s,r else bottom, bottom
+            | _ ,V(a,b) when a = zero && b =zero -> if leq (const zero) target then s,r else bottom, bottom
+            | _ -> 
             meet s (div target r), meet r (div target s)
+            end
         | AST_DIVIDE -> 
           meet s (mult target r), meet r (div s target) 
         | AST_MODULO -> s, r (* Not implemented *)
@@ -188,5 +199,5 @@ end
 
 
 module Make(Vars : VARS) : DOMAIN =
-    ValueDomainDerivation(SignValueDomain)(Vars)
+    ValueDomainDerivation(CongruenceValueDomain)(Vars)
 

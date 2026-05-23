@@ -31,6 +31,7 @@ let doit filename =
         match !Options.domain with
         | "sign" -> (module SignDomain.Make(Vars))
         | "interval" -> (module IntervalDomain.Make(Vars))
+        | "congruence" -> (module CongruenceDomain.Make(Vars))
         | _ -> (module IntervalDomain.Make(Vars)) (* default choice *)
     ) : Domain.DOMAIN) in
 
