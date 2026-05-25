@@ -23,8 +23,8 @@ end *)
 
 module IntervalCongruenceValueDomain 
 (* ( M  : sig 
-  module A 
-  module B 
+  module A : VALUE_DOMAIN
+  module B : VALUE_DOMAIN
   val reduction : (A.t * B.t) -> (A.t * B.t)
 end)
 : VALUE_DOMAIN  *) =
