@@ -1,8 +1,18 @@
+(* Product of interval and congruence domain *)
+
+
+
 (* Functor for getting the reduced product of two Value Domains *)
 (* Give identity as reduction to get the usual product*)
+(* Cannot make a functor :(, you have to copy-paste this and replace A,B and red manually *)
 
 
 open ValueDomain
+open CongruenceDomain
+open IntervalDomain
+open Domain
+open ValueDomainDerivation
+open Z
 
 (* module type M  = sig 
   module A 
@@ -10,7 +20,8 @@ open ValueDomain
   val reduction : (A.t * B.t) -> (A.t * B.t)
 end *)
 
-module ReducedProductDomain 
+
+module IntervalCongruenceValueDomain 
 (* ( M  : sig 
   module A 
   module B 
@@ -18,9 +29,28 @@ module ReducedProductDomain
 end)
 : VALUE_DOMAIN  *) =
 struct 
-  module A 
-  module B 
-  let red = M.reduction
+  module A = IntervalValueDomain
+  module B = CongruenceValueDomain
+  let real_div (x:Z.t) (y:Z.t) : Z.t = 
+    if x >= Z.zero then x/y 
+    else x/y + Z.one  
+  
+  let red ((i, z) : A.t *B.t)  : (A.t * B.t) =
+    match i,z with 
+    | _,Bottom -> A.bottom, CongruenceValueDomain.bottom 
+    | (_,POS_INF), _ | (NEG_INF, _), _ -> i,z 
+    | (POS_INF,  _), _ | (_,NEG_INF) , _-> A.bottom, CongruenceValueDomain.bottom
+    | (INT_BOUND a,INT_BOUND b),V(c,d) -> begin 
+      if c = zero then begin 
+        if a <= d && d <= b then (A.const d, B.const d)
+        else A.bottom, B.bottom
+      end else 
+      let a' = real_div (a-d -one) (abs c) in (* I think this formula works*) 
+      let b' = real_div (b-d) (abs c) in
+      if a' = b' then A.bottom, CongruenceValueDomain.bottom
+      else if a' = b' - one then (A.const (b' * (abs c) + d), B.const(b' * (abs c) + d))  
+      else (i,z)
+    end
 
   type t = A.t * B.t 
 
@@ -88,3 +118,6 @@ struct
 
 
 end
+
+module Make(Vars : VARS) : DOMAIN =
+    ValueDomainDerivation(IntervalCongruenceValueDomain)(Vars)

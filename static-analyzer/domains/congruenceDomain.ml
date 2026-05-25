@@ -5,7 +5,7 @@ open ValueDomain
 open ValueDomainDerivation
 open Z
 
-module CongruenceValueDomain : VALUE_DOMAIN = struct
+module CongruenceValueDomain  = struct
 
     type t = V of Z.t * Z.t | Bottom
 

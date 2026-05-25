@@ -288,20 +288,25 @@ solved=0
 
 #treat_examples "bool" "Boolean operations" "--domain sign" ""
 #treat_examples "bool" "Boolean operations" "--domain interval" ""
-treat_examples "bool" "Boolean operations(C)" "--domain congruence" ""
+#treat_examples "bool" "Boolean operations(C)" "--domain congruence" ""
 # treat_examples "constant" "Constants operations" "--domain sign" ""
-treat_examples "sign" "Sign operations" "--domain sign" ""
-treat_examples "constant" "Constants operations (I)" "--domain interval" ""
+#treat_examples "sign" "Sign operations" "--domain sign" ""
+#treat_examples "constant" "Constants operations (I)" "--domain interval" ""
 #treat_examples "interval" "Interval operations" "--domain interval" ""
 # treat_examples "constant_loop" "Constants loops" "--domain sign" ""
 #treat_examples "constant_loop" "Constants loops (I)" "--domain interval" ""
 # treat_examples "interval_loop" "Interval loops" "--domain interval" ""
-treat_examples "constant" "Constants operations" "--domain congruence" ""
+#treat_examples "constant" "Constants operations" "--domain congruence" ""
 # treat_examples "interval" "Interval operations" "--domain congruence" ""
 # la ligne juste au dessus fait plein d'erreurs de completude c'est normal
-treat_examples "constant_loop" "Constants loops" "--domain congruence" ""
+#treat_examples "constant_loop" "Constants loops" "--domain congruence" ""
 # treat_examples "interval_loop" "Interval loops" "--domain congruence" ""
 
+treat_examples "bool" "Boolean operations" "--domain ICP" ""
+treat_examples "constant" "Constants operations" "--domain intervalcongruenceproduct" ""
+treat_examples "constant_loop" "Constants loops" "--domain intervalcongruenceproduct" ""
+treat_examples "constant" "Constants operations" "--domain ICP" ""
+treat_examples "interval" "Interval operations" "--domain ICP" ""
 
 
 echo "</table>"                                   >> $index_html
