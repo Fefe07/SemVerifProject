@@ -32,7 +32,7 @@ let doit filename =
         | "sign" -> (module SignDomain.Make(Vars))
         | "interval" -> (module IntervalDomain.Make(Vars))
         | "congruence" -> (module CongruenceDomain.Make(Vars))
-        | "intervalcongruenceproduct" | "ICP" -> (module ReducedProductDomain.Make(Vars))
+        | "intervalcongruenceproduct" | "ICP" -> (module IntervalCongruenceProductDomain.Make(Vars))
         | _ -> (module IntervalDomain.Make(Vars)) (* default choice *)
     ) : Domain.DOMAIN) in
 
