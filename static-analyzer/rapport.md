@@ -14,6 +14,29 @@ Les jeux de tests suivants ont été ajoutés :
 - terminate : teste la terminaison de l'iterateur
 
 
+## Itérateur
+
+Les foncteur `Make(Abs)` défini dans `iterator/iterator.ml` implémente un
+itérateur simple de worklist, l'algorithme proposé dans le sujet.
+
+Au début du module on introduit des fonctions d'affichage, permettant de
+dérouler les étapes de l'itérateur lorsque le paramètre `verbose` est activé
+(`-v` dans la ligne de commande, d'après `analyser/analyzer.ml`).
+
+L'algorithme simple parcourt le graphe et associe des environnements abstraits
+aux noeuds du graphe en fonction des instructions entrantes (disjonction faite
+dans `apply_instr`). Deux points sont cependant à commenter :
+- Lors des assertions, on utilise `Abs.guard` sur l'expression contraire
+pour déterminer s'il est possible (selon l'abstraction) de contredire
+l'expression booléenne.
+- La terminaison doit être assurée en présence des boucles, on commence donc
+l'analyse par rechercher les "widening points" par un parcours du graphe
+`find_widening_points`, qui permet de distinguer s'il faut appliquer `Abs.widen`
+avec l'abstraction définie précédemment dans l'itérateur, pour un certain noeud
+donné.
+
+Les appels de fonctions ne sont pas prises en comptes par l'itérateur.
+
 
 ## Domaines
 
