@@ -72,6 +72,10 @@ struct
     let assign dom var iexpr =
         change_map var (evaluate_iexpr dom iexpr) dom
 
+    let bwd_assign (x:t) (var:var) (iexpr : int_expr) (dom : t) = 
+        x (* Correct*)
+        (* TODO *) 
+
     (* Extends a binary operation "point à point" to maps *)
     let extend_binop (binop : Abs.t -> Abs.t -> Abs.t) map1 map2 =
         let f v = binop (find v map1) (find v map2) in

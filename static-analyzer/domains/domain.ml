@@ -34,6 +34,9 @@ module type DOMAIN = sig
   (* assign an integer expression to a variable *)
   val assign : t -> var -> int_expr -> t
 
+  (* bwd_assign x var expr result renvoie x' <= x qui prend en compte que assign x var expr = result *)
+  val bwd_assign : t -> var -> int_expr -> t -> t 
+
   (* filter environments to keep only those satisfying the boolean expression *)
   val guard : t -> bool_expr -> t
 
