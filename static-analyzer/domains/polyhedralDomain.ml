@@ -60,21 +60,13 @@ module Make(Vars : VARS) : DOMAIN = struct
         Tcons1.make e Tcons1.SUPEQ
 
     let rec translate_constraint cop e1 e2 : Tcons1.earray =
-        (* only straightforward translation *)
-        (* giving SUPEQ, EQ and DISEQ constraints *)
+        (* only straightforward translation of comparison constraints *)
+        (* giving SUPEQ and EQ constraints *)
         let wrap1 c =
             let ar = Tcons1.array_make env 1 in
             Tcons1.array_set ar 0 c;
             ar
         in
-(*
-        let wrap2 c1 c2 =
-            let ar = Tcons1.array_make env 2 in
-            Tcons1.array_set ar 0 c1;
-            Tcons1.array_set ar 1 c2;
-            ar
-        in
-*)
         match cop with
         | AS.AST_LESS -> translate_constraint AS.AST_GREATER e2 e1
         | AS.AST_LESS_EQUAL -> translate_constraint AS.AST_GREATER_EQUAL e2 e1
@@ -104,12 +96,7 @@ module Make(Vars : VARS) : DOMAIN = struct
             let c = Tcons1.make e Tcons1.EQ in
             wrap1 c
         | AS.AST_NOT_EQUAL ->
-            let e1' = translate_iexpr e1 in
-            let e2' = translate_iexpr e2 in
-            let open Texpr1 in
-            let e = of_expr env @@ Binop(Sub, e1', e2', Int, Zero) in
-            let c = Tcons1.make e Tcons1.DISEQ in
-            wrap1 c
+                failwith "Constraint translation"
 
     let negate_cop cop = AS.(
         match cop with
@@ -144,25 +131,16 @@ module Make(Vars : VARS) : DOMAIN = struct
     let is_bottom = Abstract1.is_bottom man
 
     let guard (abs : t) (bexpr : CFG.bool_expr) : t =
+        (* bool handles the propagation of negation in the bool expression *)
         let rec guard_arg abs bool = function
             | CFG.CFG_bool_const b -> if b = bool then abs else bottom
             | CFG.CFG_bool_rand -> abs
-            | CFG.CFG_compare(AS.AST_NOT_EQUAL, e1, e2) ->
-                if bool then
-                    join (
-                        Abstract1.meet_tcons_array man abs
-                            (translate_constraint AS.AST_GREATER e1 e2)
-                    ) (
-                        Abstract1.meet_tcons_array man abs
-                            (translate_constraint AS.AST_GREATER e2 e1)
-                    )
-                else
-                Abstract1.meet_tcons_array man abs
-                    (translate_constraint AS.AST_EQUAL e1 e2)
-            | CFG.CFG_compare(AS.AST_EQUAL, e1, e2) ->
-                if bool then
-                Abstract1.meet_tcons_array man abs
-                    (translate_constraint AS.AST_EQUAL e1 e2)
+            | CFG.CFG_compare(AS.AST_NOT_EQUAL as cop, e1, e2)
+            | CFG.CFG_compare(AS.AST_EQUAL as cop, e1, e2) ->
+                (* != is split into a join of two guards *)
+                if bool = (cop = AS.AST_EQUAL) then
+                    Abstract1.meet_tcons_array man abs
+                        (translate_constraint AS.AST_EQUAL e1 e2)
                 else
                     join (
                         Abstract1.meet_tcons_array man abs
@@ -177,16 +155,12 @@ module Make(Vars : VARS) : DOMAIN = struct
                     (translate_constraint cop' e1 e2)
             | CFG.CFG_bool_unary(AS.AST_NOT, bexpr) ->
                     guard_arg abs (not bool) bexpr
-            | CFG.CFG_bool_binary(AS.AST_AND, be1, be2) ->
-                if bool then
-                    meet (guard_arg abs true be1) (guard_arg abs true be2)
-                else
-                    join (guard_arg abs false be1) (guard_arg abs false be2)
-            | CFG.CFG_bool_binary(AS.AST_OR, be1, be2) ->
-                if bool then
-                    join (guard_arg abs true be1) (guard_arg abs true be2)
-                else
-                    meet (guard_arg abs false be1) (guard_arg abs false be2)
+            | CFG.CFG_bool_binary(AS.AST_AND as bbop, be1, be2)
+            | CFG.CFG_bool_binary(AS.AST_OR as bbop, be1, be2) ->
+                (* De Morgan laws propagate bool *)
+                (if bool = (bbop = AS.AST_AND) then meet else join)
+                    (guard_arg abs bool be1)
+                    (guard_arg abs bool be2)
         in
         guard_arg abs true bexpr
 

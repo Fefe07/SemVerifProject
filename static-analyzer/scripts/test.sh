@@ -293,11 +293,11 @@ treat_examples "bool" "Boolean operations (P)" "--domain polyhedral" ""
 
 treat_examples "constant" "Constants operations (I)" "--domain interval" ""
 treat_examples "constant" "Constants operations (C)" "--domain congruence" ""
-treat_examples "constant" "Constants operations (P)" "--domain polyhedral" ""
 
 treat_examples "sign" "Sign operations" "--domain sign" ""
 treat_examples "interval" "Interval operations" "--domain interval" ""
 treat_examples "interval" "Interval operations (P)" "--domain polyhedral" ""
+treat_examples "polyhedral" "Constants operations (P)" "--domain polyhedral" ""
 # treat_examples "interval" "Interval operations" "--domain congruence" ""
 # la ligne juste au dessus fait plein d'erreurs de completude c'est normal
 
@@ -314,6 +314,11 @@ treat_examples "interval_loop" "Interval loops" "--domain ICP" ""
 treat_examples "interval" "Interval operations" "--domain ICP" ""
 treat_examples "congruence" "Congruence" "--domain congruence" ""
 treat_examples "interval_congruence" "Interval and Congruence" "--domain ICP" ""
+
+treat_examples "terminate" "Terminate (I)" "--domain interval" ""
+treat_examples "terminate" "Terminate (C)" "--domain congruence" ""
+treat_examples "terminate" "Terminate (P)" "--domain polyhedral" ""
+treat_examples "terminate" "Terminate (ICP)" "--domain ICP" ""
 
 
 echo "</table>"                                   >> $index_html

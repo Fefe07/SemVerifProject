@@ -28,7 +28,7 @@ struct
         if Abs.is_bottom abs then VarMap.empty else
         VarMap.add var abs dom
 
-    (* Find in domain, output Abs.bottom if  *)
+    (* Find in domain, output Abs.bottom if not found *)
     let find (var : var) (dom : t) : Abs.t =
         try VarMap.find var dom with Not_found -> Abs.bottom
 
