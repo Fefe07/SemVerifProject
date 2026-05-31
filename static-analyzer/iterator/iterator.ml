@@ -202,13 +202,13 @@ module BackwardMake(Abs : DOMAIN) = struct
 
 
     (* Iterator *)
-    let add_out_nodes node set = List.fold_left
-        (fun set arc -> NodeSet.add (arc.arc_dst) set)
+    let add_in_nodes node set = List.fold_left
+        (fun set arc -> NodeSet.add (arc.arc_src) set)
         set
-        node.node_out
+        node.node_in
 
-    let add_out_nodes_from_list nl set = List.fold_left
-        (fun set node -> add_out_nodes node set) set nl
+    let add_in_nodes_from_list nl set = List.fold_left
+        (fun set node -> add_in_nodes node set) set nl
 
     let map_add_nodes_from_list nl abs map = List.fold_left
         (fun map node -> NodeMap.add node abs map)
@@ -216,11 +216,11 @@ module BackwardMake(Abs : DOMAIN) = struct
         nl
 
 
-    let apply_instr (abs : Abs.t) instr : Abs.t =
+    let apply_instr (abs : Abs.t) instr (r: Abs.t) : Abs.t =
         match instr with
         | CFG_skip _ -> abs
-        | CFG_assign(var, iexpr) -> Abs.bwd_assign abs var iexpr
-        | CFG_guard bexpr -> Abs.guard abs bexpr
+        | CFG_assign(var, iexpr) -> Abs.bwd_assign abs var iexpr r
+        | CFG_guard bexpr -> Abs.guard r bexpr (* Guaranties of abs' <= abs ?? *)
         | CFG_assert((bexpr, (pos, _))) -> let open Frontend.AbstractSyntax in
             let nexpr = CFG_bool_unary (AST_NOT, bexpr) in
             let neg_abs = Abs.guard abs nexpr in
@@ -233,16 +233,15 @@ module BackwardMake(Abs : DOMAIN) = struct
         node.node_out
             (* Getting all possible abstract domains for node *)
             |> List.map (fun arc ->
-                    (apply_instr (NodeMap.find arc.arc_src map) arc.arc_inst)
+                    (apply_instr (NodeMap.find node map) arc.arc_inst (NodeMap.find arc.arc_dst map))
                 )
             (* Joining them *)
             |> List.fold_left Abs.join Abs.bottom
 
 
 
-    let bwd_iterate (cfg : cfg) (init_pos : node) (init_abs : Abs.t) : Abs.t NodeMap.t =
+    let bwd_iterate (cfg : cfg) (init_pos : node) (init_abs : Abs.t) (init_map : Abs.t NodeMap.t) : Abs.t NodeMap.t =
         let wnodes = find_widening_points cfg in
-
         let rec iterate_rec cfg map set =
             if NodeSet.is_empty set then map else
             let node = NodeSet.choose set in
@@ -260,17 +259,18 @@ module BackwardMake(Abs : DOMAIN) = struct
                 let new_map = NodeMap.add node new_abs map in
                 let new_set = set
                     |> NodeSet.remove node
-                    |> add_out_nodes node
+                    |> add_in_nodes node
                 in
                 iterate_rec cfg new_map new_set
         in
 
         let init_nodes = [init_pos] in
-        let map = NodeMap.empty
-            |> map_add_nodes_from_list cfg.cfg_nodes Abs.bottom
+        let map = init_map
+            (* |> map_add_nodes_from_list cfg.cfg_nodes Abs.bottom *)
             |> map_add_nodes_from_list init_nodes init_abs
         in
-        let set = add_out_nodes_from_list init_nodes NodeSet.empty in
+        let set = add_in_nodes_from_list init_nodes NodeSet.empty in
+        print_iter_state map set init_pos init_abs init_abs;
         iterate_rec cfg map set
 
 end

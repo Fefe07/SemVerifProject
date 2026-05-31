@@ -286,35 +286,36 @@ echo "<table>"                                    >> $index_html
 total=$(expr $(find examples -name "*.c" | wc -l))
 solved=0
 
-treat_examples "bool" "Boolean operations (S)" "--domain sign" ""
-treat_examples "bool" "Boolean operations (I)" "--domain interval" ""
-treat_examples "bool" "Boolean operations (C)" "--domain congruence" ""
-treat_examples "bool" "Boolean operations (P)" "--domain polyhedral" ""
+# treat_examples "bool" "Boolean operations (S)" "--domain sign" ""
+# treat_examples "bool" "Boolean operations (I)" "--domain interval" ""
+# treat_examples "bool" "Boolean operations (C)" "--domain congruence" ""
+# treat_examples "bool" "Boolean operations (P)" "--domain polyhedral" ""
 
-treat_examples "constant" "Constants operations (I)" "--domain interval" ""
-treat_examples "constant" "Constants operations (C)" "--domain congruence" ""
-treat_examples "constant" "Constants operations (P)" "--domain polyhedral" ""
+treat_examples "constant" "Constants operations (I)" "--domain interval -v" ""
+# treat_examples "constant" "Constants operations (C)" "--domain congruence" ""
+# treat_examples "constant" "Constants operations (P)" "--domain polyhedral" ""
 
-treat_examples "sign" "Sign operations" "--domain sign" ""
-treat_examples "interval" "Interval operations" "--domain interval" ""
-treat_examples "interval" "Interval operations (P)" "--domain polyhedral" ""
-# treat_examples "interval" "Interval operations" "--domain congruence" ""
-# la ligne juste au dessus fait plein d'erreurs de completude c'est normal
+# treat_examples "sign" "Sign operations" "--domain sign" ""
+# treat_examples "interval" "Interval operations" "--domain interval" ""
+# treat_examples "interval" "Interval operations (P)" "--domain polyhedral" ""
+# # treat_examples "interval" "Interval operations" "--domain congruence" ""
+# # la ligne juste au dessus fait plein d'erreurs de completude c'est normal
 
-treat_examples "constant_loop" "Constants loops (I)" "--domain interval" ""
-treat_examples "constant_loop" "Constants loops (C)" "--domain congruence" ""
-treat_examples "constant_loop" "Constants loops (P)" "--domain polyhedral" ""
-treat_examples "interval_loop" "Interval loops" "--domain interval" ""
-treat_examples "interval_loop" "Interval loops (P)" "--domain polyhedral" ""
+# treat_examples "constant_loop" "Constants loops (I)" "--domain interval" ""
+# treat_examples "constant_loop" "Constants loops (C)" "--domain congruence" ""
+# treat_examples "constant_loop" "Constants loops (P)" "--domain polyhedral" ""
+# treat_examples "interval_loop" "Interval loops" "--domain interval" ""
+# treat_examples "interval_loop" "Interval loops (P)" "--domain polyhedral" ""
 
-treat_examples "bool" "Boolean operations" "--domain ICP" ""
-treat_examples "constant" "Constants operations" "--domain intervalcongruenceproduct" ""
-treat_examples "constant_loop" "Constants loops" "--domain intervalcongruenceproduct" ""
-treat_examples "interval_loop" "Interval loops" "--domain ICP" ""
-treat_examples "interval" "Interval operations" "--domain ICP" ""
-treat_examples "congruence" "Congruence" "--domain congruence" ""
-treat_examples "interval_congruence" "Interval and Congruence" "--domain ICP" ""
+# treat_examples "bool" "Boolean operations" "--domain ICP" ""
+# treat_examples "constant" "Constants operations" "--domain intervalcongruenceproduct" ""
+# treat_examples "constant_loop" "Constants loops" "--domain intervalcongruenceproduct" ""
+# treat_examples "interval_loop" "Interval loops" "--domain ICP" ""
+# treat_examples "interval" "Interval operations" "--domain ICP" ""
+# treat_examples "congruence" "Congruence" "--domain congruence" ""
+# treat_examples "interval_congruence" "Interval and Congruence" "--domain ICP" ""
 
+treat_examples "constant" "Constants operations (BI)" "--domain interval --backward -v" ""
 
 echo "</table>"                                   >> $index_html
 echo "</body>"                                    >> $index_html

@@ -135,6 +135,8 @@ module Make(Vars : VARS) : DOMAIN = struct
             (translate_iexpr iexpr |> Texpr1.of_expr env)
             None
 
+    let bwd_assign abs var iexpr res = abs
+
 
     let join = Abstract1.join man
     let meet = Abstract1.meet man
