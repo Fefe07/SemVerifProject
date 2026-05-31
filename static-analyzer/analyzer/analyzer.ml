@@ -33,6 +33,7 @@ let doit filename =
         | "interval" -> (module IntervalDomain.Make(Vars))
         | "congruence" -> (module CongruenceDomain.Make(Vars))
         | "polyhedral" -> (module PolyhedralDomain.Make(Vars))
+        | "intervalcongruenceproduct" | "ICP" -> (module IntervalCongruenceProductDomain.Make(Vars))
         | _ -> (module IntervalDomain.Make(Vars)) (* default choice *)
     ) : Domain.DOMAIN) in
 

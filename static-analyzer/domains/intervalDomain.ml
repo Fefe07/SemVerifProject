@@ -6,7 +6,7 @@ open Domain
 open ValueDomain
 open ValueDomainDerivation
 
-module IntervalValueDomain : VALUE_DOMAIN = struct
+module IntervalValueDomain  = struct
 
     (* Bounds *)
     type bound =

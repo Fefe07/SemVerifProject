@@ -306,8 +306,14 @@ treat_examples "constant_loop" "Constants loops (C)" "--domain congruence" ""
 treat_examples "constant_loop" "Constants loops (P)" "--domain polyhedral" ""
 treat_examples "interval_loop" "Interval loops" "--domain interval" ""
 treat_examples "interval_loop" "Interval loops (P)" "--domain polyhedral" ""
-# treat_examples "interval_loop" "Interval loops" "--domain congruence" ""
 
+treat_examples "bool" "Boolean operations" "--domain ICP" ""
+treat_examples "constant" "Constants operations" "--domain intervalcongruenceproduct" ""
+treat_examples "constant_loop" "Constants loops" "--domain intervalcongruenceproduct" ""
+treat_examples "interval_loop" "Interval loops" "--domain ICP" ""
+treat_examples "interval" "Interval operations" "--domain ICP" ""
+treat_examples "congruence" "Congruence" "--domain congruence" ""
+treat_examples "interval_congruence" "Interval and Congruence" "--domain ICP" ""
 
 
 echo "</table>"                                   >> $index_html
