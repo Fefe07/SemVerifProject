@@ -14,6 +14,8 @@ open Arg
 (* Flags *)
 let verbose = ref false
 
+let backward = ref false
+
 (* string arguments *)
 let file = ref ""
 
@@ -28,7 +30,8 @@ let args =
     , " Print the cfg in this file (default is cfg.dot)" )
   ; ( "--domain"
     , Set_string domain
-    , " Select the abstract domain (constants/interval)" ) ]
+    , " Select the abstract domain (constants/interval)" ) ;
+    ("--backward", Set backward, " Makes backward analysis of the code") ]
   |> align
 
 let usage = "usage: ./analyzer.exe [options] filename.c"
