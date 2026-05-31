@@ -12,6 +12,7 @@
 
 open Frontend
 open Domains
+open ControlFlowGraph
 
 (* parse filename *)
 let doit filename =
@@ -37,11 +38,30 @@ let doit filename =
         | _ -> (module IntervalDomain.Make(Vars)) (* default choice *)
     ) : Domain.DOMAIN) in
 
+    
+      (* Printf.printf("No backward\n"); *)
     let module Iter = Iterator.Make(AbsDom) in
     Iter.verbose := !Options.verbose;
 
     let result = Iter.iterate cfg in
-    Iter.print_abs_nodemap result
+    Iter.print_abs_nodemap result ;
+    if !Options.backward then begin
+      let module Iter_bwd = Iterator.BackwardMake(AbsDom) in
+      Iter_bwd.verbose := !Options.verbose;
+      (* bwd_iterate takes a starting node and a strating value *)
+      (* Should we run the fwd analysis and then backward on assertions ? *)
+      
+      let a = List.find (fun (a:arc) -> match a.arc_inst with CFG_assert _ -> true | _ -> false) cfg.cfg_arcs in 
+      (* let condition = match a.arc_inst with CFG_assert x -> x | _ -> assert(false) in   *)
+
+      let n = a.arc_src in
+      (* Negation de la condition du assert*)
+      (* let abs = Abs.guard Abs.Top (not a.arc_inst) in *)
+
+      let bwd_result = Iter_bwd.bwd_iterate cfg n (NodeMap.find n result) result in
+      Iter_bwd.print_abs_nodemap bwd_result
+    end
+
 
 (* parses arguments to get filename *)
 let main () =
